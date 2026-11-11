@@ -276,6 +276,7 @@ function renderItem(item) {
   header.append(meta);
   const actions = element("div", undefined, "actions");
   if (depth < 2) actions.append(button("＋ " + LABEL[depth + 1], () => titleDialog(item), "primary"));
+  if (depth === 1) actions.append(button("Markdownで話を追加", () => bulkDialog(node)));
   const copy = button(depth === 2 ? "本文をコピー" : LABEL[depth] + "をコピー", () => copyText(item));
   if (depth === 2) copy.disabled = !node.body.length;
   else copy.disabled = metrics(node).stories === 0;
@@ -365,6 +366,104 @@ function titleDialog(parent, editing) {
   showDialog(LABEL[depth] + (editing ? "の名前を変更" : "を作成"), form);
   input.focus();
   if (editing) input.select();
+}
+
+function parseMarkdownStories(source) {
+  const stories = [];
+  let current = null;
+  let level;
+  let fence;
+  for (const line of source.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n").split("\n")) {
+    const marker = /^ {0,3}(`{3,}|~{3,})(.*)$/.exec(line);
+    if (fence) {
+      current.lines.push(line);
+      if (marker && marker[1][0] === fence[0] && marker[1].length >= fence.length && !marker[2].trim()) {
+        fence = undefined;
+      }
+      continue;
+    }
+
+    const heading = /^ {0,3}(#{1,6})(?:[ \t]+(.*)|$)/.exec(line);
+    if (heading && (level === undefined || heading[1].length === level)) {
+      const title = (heading[2] ?? "").replace(/(?:^|[ \t]+)#+[ \t]*$/, "").trim();
+      if (!title) throw new Error("見出しに話のタイトルを入力してください。");
+      level = heading[1].length;
+      current = { title, lines: [] };
+      stories.push(current);
+      continue;
+    }
+    if (!current) {
+      if (line.trim()) throw new Error("最初の行を「# 話のタイトル」の形で書いてください。");
+      continue;
+    }
+    current.lines.push(line);
+    if (marker && (marker[1][0] === "~" || !marker[2].includes("`"))) fence = marker[1];
+  }
+
+  if (!stories.length) throw new Error("「# 話のタイトル」と本文を入力してください。");
+  if (fence) throw new Error("閉じていないコードブロックがあります。閉じてから確認してください。");
+  return stories.map(({ title, lines }) => {
+    let first = 0;
+    let last = lines.length;
+    while (first < last && !lines[first].trim()) first++;
+    while (last > first && !lines[last - 1].trim()) last--;
+    return { title, body: lines.slice(first, last).join("\n") };
+  });
+}
+
+function bulkDialog(chapter, draft = "") {
+  const form = element("form");
+  const hint = element("p", "「# タイトル」の次の行から本文を書きます。同じ数の # で始まる見出しが、次の話の区切りになります。");
+  const label = element("label", "Markdown");
+  const input = element("textarea");
+  input.id = "bulk-markdown";
+  input.rows = 12;
+  input.placeholder = "# 第1話 朝\n\n窓を開けた。\n\n# 第2話 夜\n\n星が見えた。";
+  input.value = draft;
+  label.htmlFor = input.id;
+  const error = element("p", "", "bulk-error");
+  error.setAttribute("role", "alert");
+  input.addEventListener("input", () => { error.textContent = ""; });
+  const actions = element("div", undefined, "dialog-actions");
+  const preview = element("button", "内容を確認", "primary");
+  preview.type = "submit";
+  actions.append(button("キャンセル", () => dialog.close()), preview);
+  form.append(hint, label, input, error, actions);
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    let stories;
+    try {
+      stories = parseMarkdownStories(input.value);
+    } catch (failure) {
+      error.textContent = failure.message;
+      input.focus();
+      return;
+    }
+
+    const list = element("ol", undefined, "bulk-list");
+    for (const story of stories) {
+      const row = element("li");
+      row.append(element("strong", story.title),
+        element("span", story.body ? number.format(count(story.body)) + "字" : "本文なし"));
+      list.append(row);
+    }
+    const edit = button("入力に戻る", () => bulkDialog(chapter, input.value));
+    const add = button(number.format(stories.length) + "話を追加", () => {
+      const newStories = stories.map(story => ({ id: crypto.randomUUID(), ...story }));
+      chapter.children.push(...newStories);
+      expanded.add(chapter.id);
+      save();
+      dialog.close();
+      openItem(chapter.id);
+      if (!storageError) toast(number.format(newStories.length) + "話を追加しました。");
+    }, "primary");
+    const controls = element("div", undefined, "dialog-actions");
+    controls.append(edit, add);
+    showDialog("追加する話を確認", element("p", "「" + chapter.title + "」の末尾に追加します。"), list, controls);
+    edit.focus();
+  });
+  showDialog("Markdownで話を追加", form);
+  input.focus();
 }
 
 function organize(item, index) {

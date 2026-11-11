@@ -64,3 +64,12 @@ dialog::backdrop{background:#12251f9e}.dialog-inner{padding:22px}.dialog-header{
 #toast:empty{display:none}
 @media(max-width:680px){.top{min-height:62px}.brand{gap:7px}.top-actions{gap:4px}.top-button{font-size:11px;padding:6px}.layout{display:block}.shelf{padding:15px;border-right:0;border-bottom:1px solid var(--line)}.shelf-heading{margin-bottom:8px}.shelf-count{margin-top:8px}#tree{max-height:235px;overflow:auto}.workspace{padding:18px 14px 28px}.hero{grid-template-columns:minmax(0,1fr) 72px}.hero p{font-size:13px}.tree-row .twisty{width:40px}}
 @media(max-width:360px){.hero{display:block}.book-art{display:none}}
+.top{padding-top:max(13px,env(safe-area-inset-top));padding-left:max(clamp(14px,4vw,60px),env(safe-area-inset-left));padding-right:max(clamp(14px,4vw,60px),env(safe-area-inset-right))}
+.layout{padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)}
+#toast{bottom:max(16px,env(safe-area-inset-bottom))}
+#dialog:has(#bulk-markdown,.bulk-list){width:min(620px,calc(100% - 28px));max-height:calc(100dvh - 30px)}
+#bulk-markdown{min-height:110px;height:min(275px,40dvh);font-size:16px;resize:vertical}
+.bulk-error{color:#8b3e37}.bulk-error:empty{display:none}
+.bulk-list{max-height:38dvh;overflow:auto;margin:0 0 16px;padding-left:26px}
+.bulk-list li{padding:7px 4px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.bulk-list span{display:block;color:var(--muted);font-size:12px}
