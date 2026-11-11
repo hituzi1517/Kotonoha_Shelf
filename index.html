@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#193e35">
+<title>ことのは書架</title>
+<link rel="stylesheet" href="./style.css">
+<script defer src="./app.js"></script>
+</head>
+<body>
+<a class="skip" href="#workspace">本文へ</a>
+<header class="top">
+  <div class="brand"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span><span>ことのは書架</span></div>
+  <div class="top-actions"><button id="random" class="top-button"><span aria-hidden="true">⤨</span> ランダム</button><button id="backup" class="top-button">バックアップ</button></div>
+</header>
+<main class="layout">
+  <aside class="shelf" aria-label="本棚">
+    <div class="shelf-heading"><h1>本棚</h1><button id="add-series" class="primary small">＋ シリーズ</button></div>
+    <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="タイトル・本文を検索" aria-label="タイトル・本文を検索"></label>
+    <p class="shelf-count" id="shelf-count"></p>
+    <nav id="tree" aria-label="シリーズ・章・話"></nav>
+  </aside>
+  <section class="workspace" id="workspace" tabindex="-1" aria-label="作業エリア">
+    <div id="content"></div>
+  </section>
+</main>
+<dialog id="dialog" aria-labelledby="dialog-title"><div class="dialog-inner">
+  <div class="dialog-header"><h2 id="dialog-title"></h2><form method="dialog"><button aria-label="閉じる" class="icon-button">×</button></form></div>
+  <div id="dialog-body"></div>
+</div></dialog>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<div id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
